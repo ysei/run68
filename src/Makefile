@@ -30,7 +30,8 @@ OBJS =	calc.o doscall.o exec.o getini.o iocscall.o key.o \
 	load.o mem.o run68.o debugger.o eaaccess.o disassemble.o \
 	conditions.o
 
-CC = gcc
+# CC = gcc
+CC = gcc -I$(PWD)
 
 #LDFLAGS = -lc -lcygwin -lm -lg -lmsvcrt40
 LDFLAGS = -lcygwin -lmsvcrt40
@@ -52,5 +53,9 @@ release:
 
 run68.exe: $(OBJS)
 	gcc -o run68.exe $(OBJS) $(LDFLAGS)
+
+doscall.o: doscall.c dos.h
+#	gcc -o doscall.o doscall.c
+	$(CC) -o doscall.o doscall.c
 
 $(OBJS): run68.h

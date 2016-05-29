@@ -138,6 +138,12 @@
 #define EA_Variable		0x01ff	/* 0000 0001 1111 1111 */
 #define EA_VariableMemory	0x01fc	/* 0000 0001 1111 1100 */
 
+
+
+#include <stdbool.h>
+typedef bool *BOOL;
+
+
 /* EaAccess.c */
 BOOL get_data_at_ea(int AceptAdrMode, int mode, int reg, int size, long *data) ;
 BOOL set_data_at_ea(int AceptAdrMode, int mode, int reg, int size, long data) ;
@@ -208,6 +214,11 @@ extern long trap_pc;
 extern jmp_buf jmp_when_abort;
 extern unsigned short cwatchpoint;
 /* 標準入力のハンドル */
+
+
+typedef void *HANDLE;
+
+
 extern HANDLE stdin_handle;
 
 /* 命令実行情報 */
