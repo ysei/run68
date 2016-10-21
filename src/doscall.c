@@ -64,14 +64,16 @@
 #if !defined(__GNUC__)
 #include <conio.h>
 #endif
-#if !defined(WIN32)
+#if defined(DOSX)
 #include <dos.h>
 #include <direct.h>
 #endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "ansicolor-w32.h"
+#if defined(WIN32)
 #include <io.h>
+#endif
 
 static long Gets( long );
 static long Kflush( short );
@@ -214,7 +216,7 @@ int dos_call( UChar code )
 				  c = cnv_key98( c );
 				rd [ 0 ] = c;
 			}
-#else
+#elif defined(DOSX)
 			rd [ 0 ] = 0;
 			if ( kbhit() != 0 ) {
 				c = _getch();
@@ -228,6 +230,8 @@ int dos_call( UChar code )
 				  ungetch( c );
 				rd [ 0 ] = c;
 			}
+#else
+                        abort();  // FIXME
 #endif
 		} else {
 			putchar( srt );
@@ -506,7 +510,11 @@ int dos_call( UChar code )
 		}
 		for ( i = 5; i < FILE_MAX; i ++ ) {
 			if ( finfo [ i ].fh != NULL )
+#if defined(WIN32)
 			  CloseHandle(finfo [ i ].fh);
+#else
+			  fclose(finfo [ i ].fh);
+#endif
 		}
 		rd [ 0 ] = 0;
 		break;
@@ -957,7 +965,11 @@ int dos_call( UChar code )
 		for( i = 5; i < FILE_MAX; i ++ ) {
 			if (finfo[i].nest == nest_cnt) {
 				if (finfo [i].fh != NULL) {
+#if defined(WIN32)
 					CloseHandle(finfo [i].fh);
+#else
+					fclose(finfo [i].fh);
+#endif
 					finfo[i].fh = NULL;
 				}
 			}
@@ -989,7 +1001,11 @@ int dos_call( UChar code )
 		for( i = 5; i < FILE_MAX; i ++ ) {
 			if ( finfo [ i ].nest == nest_cnt ) {
 				if ( finfo [ i ].fh != NULL )
+#if defined(WIN32)
 				  CloseHandle(finfo [ i ].fh);
+#else
+				  fclose(finfo [ i ].fh);
+#endif
 			}
 		}
 		if ( nest_cnt <= 0 )
@@ -1826,7 +1842,11 @@ static long Delete( char *p )
 			}
 		}
 		if ( len > 0 && hdl > 0 ) {
+#if defined(WIN32)
 			CloseHandle(finfo [hdl].fh);
+#else
+			fclose(finfo [hdl].fh);
+#endif
 			errno = 0;
 			if ( remove( p ) != 0 ) {
 				if ( errno == ENOENT )
@@ -1931,9 +1951,11 @@ static long Chmod( long adr, short atr )
 #if defined(WIN32)
 		if ((ret = GetFileAttributesA(name_ptr)) == 0xFFFFFFFF)
 		  return -2;
-#else
+#elif defined(DOSX)
 		if ( _dos_getfileattr( name_ptr, &ret ) != 0 )
 		  return( -2 );        /* ファイルがない */
+#else
+		abort();  // FIXME
 #endif
 		return( ret );
 	} else {
@@ -1941,8 +1963,11 @@ static long Chmod( long adr, short atr )
 		errno = 0;
 #if defined(WIN32)
 		if (SetFileAttributesA(name_ptr, atr) == FALSE) {
-#else
+#elif defined(DOSX)
 		if ( _dos_setfileattr( name_ptr, atr ) != 0 ) {
+#else
+		abort();  // FIXME
+                {
 #endif
 			if ( errno == ENOENT )
 			  return( -2 );        /* ファイルがない */
@@ -1962,7 +1987,11 @@ static long Mkdir( long name )
 	char    *name_ptr;
 
 	name_ptr = prog_ptr + name;
+#if defined(WIN32)
 	if (CreateDirectoryA(name_ptr, NULL) == FALSE) {
+#else
+	if (mkdir(name_ptr, 0777) != 0) {
+#endif
 		if ( errno == EACCES )
 			return( -20 );    /* ディレクトリは既に存在する */
 		return( -13 );        /* ファイル名指定誤り */
@@ -1980,7 +2009,11 @@ static long Rmdir( long name )
 
 	name_ptr = prog_ptr + name;
 	errno = 0;
+#if defined(WIN32)
 	if (RemoveDirectoryA(name_ptr) == FALSE) {
+#else
+	if (rmdir(name_ptr) != 0) {
+#endif
 		if ( errno == EACCES )
 			return( -21 );    /* ディレクトリ中にファイルがある */
 		return( -13 );        /* ファイル名指定誤り */
@@ -1997,7 +2030,11 @@ static long Chdir( long name )
 	char    *name_ptr;
 
 	name_ptr = prog_ptr + name;
+#if defined(WIN32)
 	if (SetCurrentDirectory(name_ptr) == FALSE )
+#else
+	if (chdir(name_ptr) != 0 )
+#endif
 		return( -3 );        /* ディレクトリが見つからない */
 	return( 0 );
 }
@@ -2048,7 +2085,7 @@ static long Curdir( short drv, char *buf_ptr )
 #if defined(DOSX)
 		dos_getdrive( &getdrv );
 		dos_setdrive( drv, &dmy );
-#else
+#elif defined(WIN32)
 		dos_getdrive( &getdrv );
 		dos_setdrive( drv - 1, &dmy );
 #endif
@@ -2058,7 +2095,7 @@ static long Curdir( short drv, char *buf_ptr )
 	if ( drv != 0 ) {
 #if defined(DOSX)
 		dos_setdrive( getdrv, &dmy );
-#else
+#elif defined(WIN32)
 		dos_setdrive( getdrv - 1, &dmy );
 #endif
 		if ( ret_ptr == NULL )
@@ -2086,6 +2123,7 @@ static long Curdir( short drv, char *buf_ptr )
  */
 static long Files( long buf, long name, short atr )
 {
+#if defined(WIN32)
 	WIN32_FIND_DATA f_data;
 	HANDLE handle;
 	char        *name_ptr;
@@ -2154,6 +2192,9 @@ static long Files( long buf, long name, short atr )
 	/* PACKEDNAMEをセット */
 	strncpy(&buf_ptr[30], f_data.cFileName, 22);
 	buf_ptr[30+22] = 0;
+#else
+	abort();  // FIXME
+#endif
 	return( 0 );
 }
 
@@ -2163,6 +2204,7 @@ static long Files( long buf, long name, short atr )
  */
 static long Nfiles( long buf )
 {
+#if defined(WIN32)
 	WIN32_FIND_DATA f_data;
 	HANDLE handle;
 	unsigned int i;
@@ -2278,6 +2320,9 @@ static long Nfiles( long buf )
 	/* PACKEDNAMEをセット */
 	strncpy(&buf_ptr[30], f_data.cFileName, 22);
 	buf_ptr[30+22] = 0;
+#else
+	abort();  // FIXME
+#endif
 	return( 0 );
 }
 
@@ -2336,7 +2381,7 @@ static long Filedate( short hdl, long dt )
 	ll_wtime = (((__int64)wtime.dwLowDateTime) << 32) + (__int64)wtime.dwLowDateTime;
 	return (long)(((ll_wtime / 86400 / 10000000) << 16)
 					+ (ll_wtime / 10000000) % 86400);
-#else
+#elif defined(DOSX)
 	if ( dos_getftime( dosfh, &fd, &ft ) != 0 )
 		return( 0 );
 
@@ -2344,6 +2389,8 @@ static long Filedate( short hdl, long dt )
 	ftime = ft;
 	get_jtime( &fdate, &ftime, 1 );
 	return( (fdate << 16) | ftime );
+#else
+	abort();  // FIXME
 #endif
 }
 
@@ -2361,11 +2408,13 @@ static long Getdate()
 	GetLocalTime(&stime);
 	ret = ((long)(stime.wDayOfWeek) << 16) + (((long)(stime.wYear) - 1980) << 9) +
 		((long)(stime.wMonth) << 5) + (long)(stime.wDay);
-#else
+#elif defined(DOSX)
 	struct dos_date_t ddate;
 	dos_getdate( &ddate );
 	ret = (ddate.dayofweek << 16) + ((ddate.year -1980) << 9) +
 		(ddate.month << 5) + ddate.day;
+#else
+	abort();  // FIXME
 #endif
 	return( ret );
 }
@@ -2388,7 +2437,7 @@ static long Setdate( short dt )
 	b = SetLocalTime(&stime);
 	if (!b)
 		return -14;     /* パラメータ不正 */
-#else
+#elif defined(DOSX)
 	struct dos_date_t ddate;
 
 	ddate.year  = ((dt >> 9) & 0x7F) + 1980;
@@ -2397,6 +2446,8 @@ static long Setdate( short dt )
 
 	if ( dos_setdate( &ddate ) != 0 )
 		return( -14 );        /* パラメータ不正 */
+#else
+	abort();  // FIXME
 #endif
 	return( 0 );
 }
@@ -2418,7 +2469,7 @@ static long Gettime( int flag )
 	else
 		// ret = stime.wHour << 16 + stime.wMinute << 8 + stime.wSecond;
 		ret = ((long)(stime.wHour) << 16) + ((long)(stime.wMinute) << 8) + (long)(stime.wSecond);
-#else
+#elif defined(DOSX)
 	struct dos_time_t dtime;
 	dos_gettime( &dtime );
 
@@ -2426,6 +2477,8 @@ static long Gettime( int flag )
 		ret = (dtime.hour << 11) + (dtime.minute << 5) + (dtime.second >> 1);
 	else
 		ret = (dtime.hour << 16) + (dtime.minute << 8) + dtime.second;
+#else
+	abort();  // FIXME
 #endif
 	return( ret );
 }
@@ -2447,7 +2500,7 @@ static long Settim2( long tim )
 	b = SetSystemTime(&stime);
 	if (!b)
 		return -14;     /* パラメータ不正 */
-#else
+#elif defined(DOSX)
 	struct dos_time_t dtime;
 
 	dtime.hour    = ((tim >> 16) & 0x1F);
@@ -2456,6 +2509,8 @@ static long Settim2( long tim )
 	dtime.hsecond = 0;
 	if ( dos_settime( &dtime ) != 0 )
 		return( -14 );        /* パラメータ不正 */
+#else
+	abort();  // FIXME
 #endif
 	return( 0 );
 }
@@ -2603,9 +2658,11 @@ static long Namests( long name, long buf )
 		char path[MAX_PATH];
 		GetCurrentDirectory(strlen(path), path);
 		mem_set( buf + 1, path[0] - 'A', S_BYTE );
-#else /* DOSX */
+#elif defined(DOSX)
 		dos_getdrive( &getdrv );
 		mem_set( buf + 1, getdrv - 1, S_BYTE );
+#else
+		mem_set( buf + 1, 0, S_BYTE );
 #endif
 	} else {
 		drv = toupper(nbuf[ 0 ]) - 'A';
@@ -2687,8 +2744,10 @@ static long Nameck( long name, long buf )
 		BOOL b;
 		b = GetCurrentDirectoryA(sizeof(path), path);
 		drv = path[0] - 'A' + 1;
-#else
+#elif defined(DOSX)
 		dos_getdrive( &drv );
+#else
+		drv = 1;
 #endif
 		buf_ptr [ 0 ] = drv - 1 + 'A';
 		buf_ptr [ 1 ] = ':';
@@ -3269,8 +3328,10 @@ static long gets2( char *str, int max )
 		str[ cnt ++ ] = EOF;
 #if defined(WIN32)
 	WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), "\x01B[1A", 4, &dmy, NULL);
-#else
+#elif defined(DOSX)
 	_dos_write( fileno(stdout), "\x01B[1A", 4, &dmy );
+#else
+	abort();  // FIXME
 #endif
 	/* printf("%c[1A", 0x1B); */    /* カーソルを１行上に */
 	str[ cnt ] = '\0';

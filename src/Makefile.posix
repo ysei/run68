@@ -1,11 +1,11 @@
-SRCS =	calc.c exec.c getini.c iocscall.c key.c \
+SRCS =	calc.c doscall.c exec.c getini.c iocscall.c key.c \
 	line0.c line2.c line4.c line5.c \
 	line6.c line7.c line8.c line9.c lineb.c linec.c \
 	lined.c linee.c linef.c \
 	load.c mem.c run68.c debugger.c eaaccess.c disassemble.c \
 	conditions.c ansicolor-w32.c
 
-OBJS =	calc.o exec.o getini.o iocscall.o key.o \
+OBJS =	calc.o doscall.o exec.o getini.o iocscall.o key.o \
 	line0.o line2.o line4.o line5.o \
 	line6.o line7.o line8.o line9.o lineb.o linec.o \
 	lined.o linee.o linef.o \

@@ -101,6 +101,9 @@
 #if !defined(DOSX)
 #include <limits.h>
 #define MAX_PATH	PATH_MAX
+#define _flushall()	fflush(NULL)
+#define _getch		getchar
+#define _getche()	putchar(getchar())
 #define _fcvt		fcvt
 #define _gcvt		gcvt
 #define _stricmp	strcasecmp
