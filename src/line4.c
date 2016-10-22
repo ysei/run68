@@ -667,8 +667,9 @@ static	int	Move_t_usp( char code )
 	printf( "trace: move_t_usp PC=%06lX\n", pc );
 #endif
 
-	err68( "MOVE TO USP–½—ß‚ðŽÀs‚µ‚Ü‚µ‚½" );
-	return( TRUE );
+	//err68( "MOVE TO USP–½—ß‚ðŽÀs‚µ‚Ü‚µ‚½" );
+	//return( TRUE );
+	return( FALSE );
 }
 
 /*
@@ -1071,6 +1072,9 @@ static	int	Trap( char code )
 
 	if ( (code & 0x0F) == 15 ) {
 		return( iocs_call() );
+	} else if ( (code & 0x0F) == 3 ) {
+		printf("ZMUSIC\n");
+		return( FALSE );
 	} else if (((code & 0x0f) >= 0x0) && ((code & 0x0f) <= 0x8)) {
 
 		ra [ 7 ] -= 4;

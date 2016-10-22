@@ -161,6 +161,10 @@ static int mem_red_chk( long adr )
 	char message[256];
 
 	adr &= 0x00FFFFFF;
+	if ( ( 0xEBC000 > adr && adr >= 0xEB8000 ) ||
+             ( 0xE82500 == adr ) ) {
+		return( FALSE );
+        }
 	if ( adr >= 0xC00000 ) {
 		if ( ini_info.io_through == TRUE )
 			return( FALSE );
@@ -186,6 +190,13 @@ static int mem_wrt_chk( long adr )
 	char message[256];
 
 	adr &= 0x00FFFFFF;
+	if ( ( 0xE82300 > adr && adr >= 0xE82220 ) ||
+	     ( 0xEBC000 > adr && adr >= 0xEB0000 ) ||
+             ( 0xD40000 > adr && adr >= 0xD20000 ) ||
+             ( 0xE82010 > adr && adr >= 0xE82000 ) ||
+             ( 0xE82500 == adr ) ) {
+		return( FALSE );
+        }
 	if ( adr >= 0xC00000 ) {
 		if ( ini_info.io_through == TRUE )
 			return( FALSE );

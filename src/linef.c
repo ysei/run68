@@ -133,6 +133,11 @@ int	linef( char *pc_ptr )
 	if ( code == (char)0xFE )
 		return( fefunc( *pc_ptr ) );
 
+	if ( code == (char)0xFD ) {
+                static int s = 0;
+		printf("MAGIC2[%08x]: $%02x\n", s++, *pc_ptr);
+                return( 0 );
+	}
 	err68a( "–¢’è‹`‚Ì‚eƒ‰ƒCƒ“–½—ß‚ğÀs‚µ‚Ü‚µ‚½", __FILE__, __LINE__ );
 	return( TRUE );
 }
