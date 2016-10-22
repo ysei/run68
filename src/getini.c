@@ -26,6 +26,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#if !defined(WIN32) && !defined(DOSX)
+#include <ctype.h>
+#endif
 #include "run68.h"
 
 void	read_ini(char *path, char *prog)

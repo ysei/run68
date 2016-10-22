@@ -25,6 +25,10 @@
  *
  */
 
+#include <string.h>
+#if !defined(WIN32) && !defined(DOSX)
+#include <ctype.h>
+#endif
 #include "run68.h"
 
 /* デバッグモードのプロンプト */

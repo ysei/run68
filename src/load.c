@@ -29,6 +29,9 @@
 #include <string.h>
 #if defined(WIN32)
 #include <direct.h>
+#elif !defined(DOSX)
+#include <unistd.h>
+#include <stdlib.h>
 #endif
 #include "run68.h"
 

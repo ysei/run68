@@ -35,6 +35,7 @@
  */
 
 #include <assert.h>
+#include <string.h>
 #include "run68.h"
 
 /* prog_ptr_uは符号付きcharで不便なので、符号なしcharに変換しておく。*/

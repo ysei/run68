@@ -73,6 +73,9 @@
 #include "ansicolor-w32.h"
 #if defined(WIN32)
 #include <io.h>
+#elif !defined(DOSX)
+#include <ctype.h>
+#include <unistd.h>
 #endif
 
 static long Gets( long );

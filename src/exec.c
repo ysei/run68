@@ -38,6 +38,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "run68.h"
 #if defined(DOSX)
 #include <dos.h>

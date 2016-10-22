@@ -73,6 +73,8 @@
 #include "run68.h"
 #if defined(DOSX)
 #include <dos.h>
+#elif !defined(WIN32)
+#include <ctype.h>
 #endif
 
 #define prog_ptr_u ((unsigned char *)prog_ptr)
