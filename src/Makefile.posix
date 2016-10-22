@@ -14,9 +14,9 @@ OBJS =	calc.o doscall.o exec.o getini.o iocscall.o key.o \
 
 CC = gcc
 
-LDFLAGS = -m32 -lm
+LDFLAGS = -lm
 DEFS = -DFNC_TRACE -DENV_FROM_INI
-CFLAGS = -g -m32 $(DEFS)
+CFLAGS = -g $(DEFS)
 RELEASE_DIR = ../Release
 ARCHIVE_DIR = ../archives
 .c.o: $(CC) $(CFLAGS) $<
