@@ -301,6 +301,9 @@ int	dos_call( UChar ) ;
 /* iocscall.c */
 int	iocs_call( void ) ;
 
+/* magic2call.c */
+int	magic2_call() ;
+
 /* key.c */
 void	get_fnckey( int, char * ) ;
 void	put_fnckey( int, char * ) ;
