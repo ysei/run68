@@ -1073,7 +1073,8 @@ static	int	Trap( char code )
 	if ( (code & 0x0F) == 15 ) {
 		return( iocs_call() );
 	} else if ( (code & 0x0F) == 3 ) {
-		printf("ZMUSIC\n");
+		if (func_trace_f)
+			printf("$%06x ZMUSIC\n", pc-2);
 		return( FALSE );
 	} else if (((code & 0x0f) >= 0x0) && ((code & 0x0f) <= 0x8)) {
 
