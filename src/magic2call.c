@@ -1,6 +1,8 @@
 #undef MAIN
 
 #include "run68.h"
+#include <stdint.h>
+#include <stdlib.h>
 
 enum {
   SET_WINDOW   = 0x0006,
@@ -23,7 +25,7 @@ int ext_color = FALSE;
 int magic2_call() {
   long cmd_adr = ra[0];
   if (func_trace_f)
-    printf("$%06x MAGIC2\n", pc - 2);
+    printf("$%06lx MAGIC2\n", pc - 2);
   for (short cmd = 0; (cmd = mem_get(cmd_adr, S_WORD)) != DONE; cmd_adr += 2) {
     switch (cmd) {
       case SET_WINDOW: {
@@ -90,7 +92,7 @@ int magic2_call() {
         break;
       case DISPLAY:
         printf("    { \"command\": \"display 2d\" },\n");
-        break;
+        return 5;
       case COLOR: {
         UShort color = mem_get(cmd_adr + 2, S_WORD);
         cmd_adr += 2;  // color

@@ -79,8 +79,12 @@
 
 #define prog_ptr_u ((unsigned char *)prog_ptr)
 
+#ifdef EMSCRIPTEN
+static  int     exec_emscripten(BOOL *restart);
+#else
 static  int     exec_trap(BOOL *restart);
 static  int     exec_notrap(BOOL *restart);
+#endif
 static  void    trap_table_make( void );
 extern char *disassemble(long addr, long* next_addr);
 
@@ -366,10 +370,14 @@ Restart:
 	ra [ 7 ] = STACK_TOP + STACK_SIZE;
 	superjsr_ret = 0;
 	usp = 0;
+#ifdef EMSCRIPTEN
+        ret = exec_emscripten(&restart);
+#else
 	if ( ini_info.trap_emulate == TRUE )
 		ret = exec_trap(&restart);
 	else
 		ret = exec_notrap(&restart);
+#endif
 
 	/* 終了 */
 	if (trace_f || func_trace_f)
@@ -393,6 +401,116 @@ Restart:
 	}
 	return ret;
 }
+
+#ifdef EMSCRIPTEN
+/*
+   機能：
+     EMSCRIPTEN向けに実行する
+   戻り値：
+     終了コード
+*/
+static int exec_emscripten(BOOL *restart)
+{
+	RUN68_COMMAND cmd;
+	BOOL    cont_flag = TRUE;
+	int     ret;
+	BOOL    running = TRUE;
+
+	*restart = FALSE;
+	OPBuf_clear();
+	do {
+		BOOL ecode;
+		/* 実行した命令の情報を保存しておく */
+		OP_info.pc    = 0;
+		OP_info.code  = 0;
+		OP_info.rmem  = 0;
+		OP_info.rsize = 'N';
+		OP_info.wmem  = 0;
+		OP_info.wsize = 'N';
+		OP_info.mnemonic[0] = 0;
+		if ( superjsr_ret == pc ) {
+			SR_S_OFF();
+			superjsr_ret = 0;
+		}
+        if (trap_pc != 0 && pc == trap_pc)
+        {
+            fprintf(stderr, "(run68) breakpoint:MPUがアドレス$%06Xの命令を実行しました。\n", pc);
+            debug_on = TRUE;
+            if (stepcount != 0)
+            {
+                fprintf(stderr, "(run68) breakpoint:%d counts left.\n", stepcount);
+                stepcount = 0;
+            }
+        } else if (cwatchpoint != 0x4afc
+                && cwatchpoint == ((unsigned short)prog_ptr_u[pc] << 8)
+                                 + (unsigned short)prog_ptr_u[pc+1])
+        {
+            fprintf(stderr, "(run68) watchpoint:MPUが命令0x%04xを実行しました。\n", cwatchpoint);
+            debug_on = TRUE;
+            if (stepcount != 0)
+            {
+                fprintf(stderr, "(run68) breakpoint:%d counts left.\n", stepcount);
+                stepcount = 0;
+            }
+		}
+        if (debug_on)
+        {
+            debug_on = FALSE;
+            debug_flag = TRUE;
+            cmd = debugger(running);
+            switch(cmd)
+            {
+            case RUN68_COMMAND_RUN:
+                *restart = TRUE;
+                running = TRUE;
+                goto EndOfFunc;
+            case RUN68_COMMAND_CONT:
+                goto NextInstruction;
+            case RUN68_COMMAND_STEP:
+            case RUN68_COMMAND_NEXT:
+                debug_on = TRUE;
+                goto NextInstruction;
+            case RUN68_COMMAND_QUIT:
+                cont_flag = FALSE;
+                goto NextInstruction;
+            }
+        } else if (stepcount != 0) {
+            stepcount --;
+            if (stepcount == 0)
+            {
+                debug_on = 1;
+            }
+        }
+		if ( (pc & 0xFF000001) != 0 ) {
+			err68b( "アドレスエラーが発生しました", pc, OPBuf_getentry(0)->pc);
+			break;
+		}
+NextInstruction:
+		/* PCの値とニーモニックを保存する */
+		OP_info.pc = pc;
+		OP_info.code = *((unsigned short*)(prog_ptr + pc));
+		if ((ret = setjmp(jmp_when_abort)) != 0)
+		{
+			debug_on = TRUE;
+			continue;
+		}
+		ecode = prog_exec();
+		if (ecode == TRUE) {
+			running = FALSE;
+			if (debug_flag)
+			{
+				debug_on = TRUE;
+			} else {
+				cont_flag = FALSE;
+			}
+		}
+		OPBuf_insert(&OP_info);
+	} while (cont_flag);
+EndOfFunc:
+	return rd[0];
+}
+
+#else
 
 /*
  　機能：割り込みをエミュレートして実行する
@@ -535,6 +653,7 @@ NextInstruction:
 EndOfFunc:
 	return rd[0];
 }
+#endif
 
 /*
    機能：

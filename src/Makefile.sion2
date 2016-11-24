@@ -14,7 +14,7 @@ OBJS =	calc.o doscall_sion2.o exec.o getini.o iocscall_sion2.o key.o \
 	conditions.o ansicolor-w32.o \
 	magic2call.o
 
-CC = gcc
+CC = emcc
 
 LDFLAGS = -lm
 DEFS = -DFNC_TRACE -DENV_FROM_INI
@@ -34,6 +34,6 @@ release:
 	cp *.ini $(RELEASE_DIR); cp *.txt $(RELEASE_DIR)
 
 run68: $(OBJS)
-	gcc -o run68 $(OBJS) $(LDFLAGS) && echo "*** doscall.c is not implemented yet. this binary should be still useless ***"
+	emcc -o run68.html --preload-file sion2 $(OBJS) $(LDFLAGS)
 
 $(OBJS): run68.h
