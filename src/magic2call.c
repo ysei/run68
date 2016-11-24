@@ -22,7 +22,14 @@ enum {
 
 int ext_color = FALSE;
 
+#if defined(EMSCRIPTEN)
+extern int jsrt_magic2(char* cmd_adr);
+#endif
+
 int magic2_call() {
+#if defined(EMSCRIPTEN)
+  return jsrt_magic2(&prog_ptr[ra[0]]);
+#else
   long cmd_adr = ra[0];
   if (func_trace_f)
     printf("$%06lx MAGIC2\n", pc - 2);
@@ -133,5 +140,6 @@ int magic2_call() {
   }
   printf("    { \"command\": \"done\" },\n");
   return 0;
+#endif
 }
 
