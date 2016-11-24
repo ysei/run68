@@ -22,6 +22,7 @@
 #undef	MAIN
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "run68.h"
 
 static	int	mem_red_chk( long );
@@ -247,5 +248,9 @@ void run68_abort( long adr )
 	printf("\n");
 	printf( "  pc=%08lx    sr=%04x\n" , pc, sr );
 #endif
+#ifdef EMSCRIPTEN
+    abort();
+#else
 	longjmp(jmp_when_abort, 2);
+#endif
 }

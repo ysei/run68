@@ -1,8 +1,8 @@
 #undef MAIN
 
-#include "run68.h"
 #include <stdint.h>
 #include <stdlib.h>
+#include "run68.h"
 
 enum {
   SET_WINDOW   = 0x0006,
