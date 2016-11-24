@@ -414,50 +414,20 @@ Restart:
 */
 static void exec_emscripten()
 {
-	RUN68_COMMAND cmd;
-	BOOL    cont_flag = TRUE;
-	int     ret;
-	BOOL    running = TRUE;
-
-	OPBuf_clear();
-	do {
-		BOOL ecode;
-		/* 実行した命令の情報を保存しておく */
-		OP_info.pc    = 0;
-		OP_info.code  = 0;
-		OP_info.rmem  = 0;
-		OP_info.rsize = 'N';
-		OP_info.wmem  = 0;
-		OP_info.wsize = 'N';
-		OP_info.mnemonic[0] = 0;
-		if ( superjsr_ret == pc ) {
-			SR_S_OFF();
-			superjsr_ret = 0;
-		}
-        if (trap_pc != 0 && pc == trap_pc)
-        {
-            fprintf(stderr, "(run68) breakpoint:MPUがアドレス$%06Xの命令を実行しました。\n", pc);
-            break;
-        } else if (cwatchpoint != 0x4afc
-                && cwatchpoint == ((unsigned short)prog_ptr_u[pc] << 8)
-                                 + (unsigned short)prog_ptr_u[pc+1])
-        {
-            fprintf(stderr, "(run68) watchpoint:MPUが命令0x%04xを実行しました。\n", cwatchpoint);
-            break;
-		}
+	for (;;) {
 		if ( (pc & 0xFF000001) != 0 ) {
-			err68b( "アドレスエラーが発生しました", pc, OPBuf_getentry(0)->pc);
-			break;
+            fprintf(stderr, "address error at $%08x\n", pc);
+            emscripten_cancel_main_loop();
+            break;
 		}
-NextInstruction:
-		/* PCの値とニーモニックを保存する */
-		OP_info.pc = pc;
-		OP_info.code = *((unsigned short*)(prog_ptr + pc));
-		ecode = prog_exec();
-		if (ecode != FALSE)
-			cont_flag = FALSE;
-		OPBuf_insert(&OP_info);
-	} while (cont_flag);
+        int ecode = prog_exec();
+        if (FALSE == ecode)
+            continue;
+        if (TRUE == ecode)
+            emscripten_cancel_main_loop();
+        // Expects ecode 5 for waiting a vsync.
+        break;
+	}
 }
 
 #else
