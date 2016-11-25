@@ -16,9 +16,9 @@ OBJS =	calc.o doscall_sion2.o exec.o getini.o iocscall_sion2.o key.o \
 
 CC = emcc
 
-LDFLAGS = -lm
+LDFLAGS = -lm -O2
 DEFS = -DFNC_TRACE -DENV_FROM_INI
-CFLAGS = -g $(DEFS) -O2
+CFLAGS = $(DEFS) -O2
 RELEASE_DIR = ../Release
 ARCHIVE_DIR = ../archives
 .c.o: $(CC) $(CFLAGS) $<

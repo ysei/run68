@@ -130,6 +130,8 @@ class Magic2 {
   }
 
   palette (index, color) {
+    if (color == undefined)
+      return this[_].palette[index];
     var i = (color & 1) == 0 ? 0 : 4;
     var r = (((color >>  6) & 0x1f) << 3) + i;
     var g = (((color >> 11) & 0x1f) << 3) + i;
