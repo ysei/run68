@@ -7,17 +7,38 @@
         margin: 0;
         padding: none;
       }
-      canvas {
+      div {
         border: 0px none;
+      }
+      canvas {
+        display: block;
+        border: 0px none;
+        position: absolute;
+        left: 0px;
+        top: 0px;
       }
     </style>
   </head>
   <body>
-    <canvas id="canvas", width="480", height="360"></canvas>
+    <div>
+      <canvas id="canvas0" width="640" height="480" style="z-index: 0;"></canvas>
+      <canvas id="canvas1" width="640" height="480" style="z-index: 1;"></canvas>
+      <canvas id="canvas2" width="640" height="480" style="z-index: 2;"></canvas>
+      <canvas id="canvas3" width="640" height="480" style="z-index: 3;"></canvas>
+    </div>
     <script type="text/javascript" src="magic2.js"></script>
+    <script type="text/javascript" src="iocs.js"></script>
     <script type='text/javascript'>
-      var canvas = document.getElementById('canvas');
-      var magic2 = new Magic2(canvas.getContext('2d'));  /* global Magic2 */
+      var canvas0 = document.getElementById('canvas0');
+      var canvas1 = document.getElementById('canvas1');
+      var canvas2 = document.getElementById('canvas2');
+      var canvas3 = document.getElementById('canvas3');
+      var magic2 = new Magic2([
+          canvas0.getContext('2d'),
+          canvas1.getContext('2d'),
+          canvas2.getContext('2d'),
+          canvas3.getContext('2d')
+      ]);  /* global Magic2 */
       var Module = {
         preRun: [],
         postRun: [],

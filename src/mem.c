@@ -29,6 +29,12 @@ static	int	mem_red_chk( long );
 static	int	mem_wrt_chk( long );
 void	run68_abort( long );
 
+static  UChar graphic_palette[512];
+
+#if defined(EMSCRIPTEN)
+extern void jsrt_io_graphic_palette(UShort index, UShort color);
+#endif
+
 /*
  　機能：PCの指すメモリからインデックスレジスタ＋8ビットディスプレースメント
  　　　　の値を得る
@@ -103,7 +109,10 @@ long mem_get( long adr, char size )
 		if ( mem_red_chk( adr ) == FALSE )
 			return( 0 );
 	}
-	mem = (UChar *)prog_ptr + adr;
+    if ( 0xE82000 <= adr && adr < 0xE82200 )
+        mem = &graphic_palette[adr - 0xE82000];
+    else
+        mem = (UChar *)prog_ptr + adr;
 
 	switch( size ) {
 		case S_BYTE:
@@ -133,23 +142,34 @@ void mem_set( long adr, long d, char size )
 		if ( mem_wrt_chk( adr ) == FALSE )
 			return;
 	}
-	mem = (UChar *)prog_ptr + adr;
+    if ( 0xE82000 <= adr && adr < 0xE82200 )
+        mem = &graphic_palette[adr - 0xE82000];
+    else
+        mem = (UChar *)prog_ptr + adr;
 
 	switch( size ) {
 		case S_BYTE:
 			*mem = (d & 0xFF);
-			return;
+            break;
 		case S_WORD:
 			*(mem++) = ((d >> 8) & 0xFF);
 			*mem = (d & 0xFF);
-			return;
+            break;
 		default:	/* S_LONG */
 			*(mem++) = ((d >> 24) & 0xFF);
 			*(mem++) = ((d >> 16) & 0xFF);
 			*(mem++) = ((d >> 8) & 0xFF);
 			*mem = (d & 0xFF);
-			return;
+            break;
 	}
+#if defined(EMSCRIPTEN)
+    if ( 0xE82000 <= adr && adr < 0xE82200 ) {
+        if (size != S_WORD || ((adr & 1) != 0))
+            abort();
+        jsrt_io_graphic_palette((adr - 0xE82000) / 2, d);
+    }
+#endif
+
 }
 
 /*
@@ -162,10 +182,13 @@ static int mem_red_chk( long adr )
 	char message[256];
 
 	adr &= 0x00FFFFFF;
-	if ( ( 0xEBC000 > adr && adr >= 0xEB8000 ) ||
-             ( 0xE82500 == adr ) ) {
+    if ( ( 0xE82000 <= adr && adr < 0xE82200 ) )
+        return( TRUE );
+	if ( ( 0xE82400 > adr && adr >= 0xE82200 ) ||
+         ( 0xEBC000 > adr && adr >= 0xEB8000 ) ||
+         ( 0xE82500 == adr ) ) {
 		return( FALSE );
-        }
+    }
 	if ( adr >= 0xC00000 ) {
 		if ( ini_info.io_through == TRUE )
 			return( FALSE );
@@ -191,13 +214,14 @@ static int mem_wrt_chk( long adr )
 	char message[256];
 
 	adr &= 0x00FFFFFF;
-	if ( ( 0xE82300 > adr && adr >= 0xE82220 ) ||
+    if ( ( 0xE82000 <= adr && adr < 0xE82200 ) )
+        return( TRUE );
+	if ( ( 0xE82400 > adr && adr >= 0xE82000 ) ||
 	     ( 0xEBC000 > adr && adr >= 0xEB0000 ) ||
-             ( 0xD40000 > adr && adr >= 0xD20000 ) ||
-             ( 0xE82010 > adr && adr >= 0xE82000 ) ||
-             ( 0xE82500 == adr ) ) {
+         ( 0xD40000 > adr && adr >= 0xD00000 ) ||
+         ( 0xE82500 == adr ) ) {
 		return( FALSE );
-        }
+    }
 	if ( adr >= 0xC00000 ) {
 		if ( ini_info.io_through == TRUE )
 			return( FALSE );

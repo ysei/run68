@@ -18,14 +18,14 @@ CC = emcc
 
 LDFLAGS = -lm
 DEFS = -DFNC_TRACE -DENV_FROM_INI
-CFLAGS = -g $(DEFS)
+CFLAGS = -g $(DEFS) -O2
 RELEASE_DIR = ../Release
 ARCHIVE_DIR = ../archives
 .c.o: $(CC) $(CFLAGS) $<
 
 all: run68
 clean:
-	rm -f *.o run68
+	rm -f *.o run68.html run68.js run68.data
 archive:
 	tar cvfz $(ARCHIVE_DIR)/run68src`date +%G%m%d-%0k`.tar.gz *.c *.h Makefile *.txt *.ini
 

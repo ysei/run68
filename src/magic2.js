@@ -64,7 +64,7 @@ const mem_read_s16be = function (memory, addr) {
 class Magic2 {
   // constructor
   // @param {CanvasRenderingContext2D} context
-  constructor (context) {
+  constructor (contexts) {
     this[_] = {
       // private members
       window: {
@@ -77,7 +77,8 @@ class Magic2 {
         minz: 50,
         maxz: 2000,
       },
-      color: false,
+      cext: false,
+      color: 15,
       parameters: [0, 0, 0, 0, 0, 0, 0, 0, 0],
       data: {
         pct: 0,
@@ -90,27 +91,62 @@ class Magic2 {
         vertices: new Float32Array(8192 * 3),
         indices: new Float32Array(8192 * 2)
       },
-      context: context,
-      use2d: context.constructor.name == 'CanvasRenderingContext2D',
-      offscreen: null
+      palette: [
+        'rgba(  0,   0,   0, 1.0)',
+        'rgba( 85,  85,  85, 1.0)',
+        'rgba(  0,   0, 127, 1.0)',
+        'rgba(  0,   0, 255, 1.0)',
+        'rgba(127,   0,   0, 1.0)',
+        'rgba(255,   0,   0, 1.0)',
+        'rgba(127,   0, 127, 1.0)',
+        'rgba(255,   0, 255, 1.0)',
+        'rgba(  0, 127,   0, 1.0)',
+        'rgba(  0, 255,   0, 1.0)',
+        'rgba(  0, 127, 127, 1.0)',
+        'rgba(  0, 255, 255, 1.0)',
+        'rgba(127, 127,   0, 1.0)',
+        'rgba(255, 255,   0, 1.0)',
+        'rgba(170, 170, 170, 1.0)',
+        'rgba(255, 255, 255, 1.0)'
+      ],
+      contexts: contexts,
+      fgcontext: 0,
+      bgcontext: 1,
+      apage: 0,
+      use2d: contexts[0].constructor.name == 'CanvasRenderingContext2D'
     };
 
     if (this[_].use2d) {
-      const c = this[_].context;
+      const fg = this[_].contexts[this[_].fgcontext];
+      fg.fillStyle = this[_].palette[0];
+      fg.fillRect(0, 0, fg.canvas.width, fg.canvas.height);
+      fg.canvas.style.display = 'block';
 
-      // Setup offscreen canvas.
-      const canvas = document.createElement('canvas');
-      canvas.width = c.canvas.width;
-      canvas.height = c.canvas.height;
-      this[_].offscreen = canvas.getContext('2d');
-      this[_].offscreen.fillStyle = 'rgba(0, 0, 0, 255)';
-      this[_].offscreen.fillRect(
-          0, 0, canvas.width - 1, canvas.height - 1);
-
-      // Clear onscreen canvas.
-      c.fillStyle = 'rgba(0, 0, 0, 255)';
-      c.fillRect(0, 0, c.canvas.width - 1, c.canvas.height - 1);
+      const bg = this[_].contexts[this[_].bgcontext];
+      bg.fillStyle = this[_].palette[0];
+      bg.fillRect(0, 0, fg.canvas.width, fg.canvas.height);
+      bg.canvas.style.display = 'none';
     }
+  }
+
+  palette (index, color) {
+    var i = (color & 1) == 0 ? 0 : 4;
+    var r = (((color >>  6) & 0x1f) << 3) + i;
+    var g = (((color >> 11) & 0x1f) << 3) + i;
+    var b = (((color >>  1) & 0x1f) << 3) + i;
+    this[_].palette[index] = 'rgba(' + r + ',' + g + ',' + b + ',255)';
+  }
+
+  boxFull (x1, y1, x2, y2) {
+    const left = Math.min(x1, x2);
+    const top = Math.min(y1, y2);
+    const width = Math.abs(x2 - x1);
+    const height = Math.abs(y2 - y1);
+    const c = this[_].contexts[this[_].apage];
+    const scaleX = c.canvas.width / 256;
+    const scaleY = c.canvas.height / 256;
+    c.fillStyle = this[_].palette[this[_].color];
+    c.fillRect(left * scaleX, top * scaleY, width * scaleX, height * scaleY);
   }
 
   setWindow (x1, y1, x2, y2) {
@@ -118,6 +154,14 @@ class Magic2 {
     this[_].window.y = y1;
     this[_].window.w = x2 - x1;
     this[_].window.h = y2 - y1;
+  }
+
+  cls () {
+    const c = this[_].contexts[this[_].apage];
+    c.globalCompositeOperation = 'copy';
+    c.fillStyle = 'rgba(0, 0, 0, 0.0)';
+    c.fillRect(0, 0, c.canvas.width, c.canvas.height);
+    c.globalCompositeOperation = 'source-over';
   }
 
   set3dParameter (num, data) {
@@ -129,7 +173,7 @@ class Magic2 {
     this[_].data.vertices = vertices;
     this[_].data.lct = lct;
     this[_].data.indices = indices;
-    this[_].data.color = color;
+    this[_].data.color = color !== undefined ? color : this[_].color;
   }
 
   set3dRawData (memory, addr) {
@@ -147,6 +191,8 @@ class Magic2 {
     if (this[_].color) {
       this[_].data.color = mem_read_u16be(memory, addr);
       addr += 2;
+    } else {
+      this[_].data.color = this[_].color;
     }
     for (let i = 0; i < this[_].data.lct; ++i) {
       this[_].data.indices[i * 2 + 0] = mem_read_u16be(memory, addr + 0);
@@ -213,10 +259,9 @@ class Magic2 {
       // Draw
       var indices = this[_].data.indices;
       var lctx2 = this[_].data.lct * 2;
-      var c = this[_].offscreen;
+      var c = this[_].contexts[this[_].bgcontext];
       c.beginPath();
-      // FIXME: Use a specified color.
-      c.strokeStyle = 'rgba(255, 255, 255, 255)';
+      c.strokeStyle = this[_].palette[this[_].data.color];
       var w = c.canvas.width;
       var h = c.canvas.height;
       var ox = w / 2;
@@ -243,12 +288,25 @@ class Magic2 {
 
   display2d () {
     if (this[_].use2d) {
-      const c = this[_].offscreen;
-      const w = c.canvas.width;
-      const h = c.canvas.height;
-      this[_].context.putImageData(c.getImageData(0, 0, w, h), 0, 0);
-      c.fillRect(0, 0, w - 1, h - 1);
+      const previous = this[_].fgcontext;
+      this[_].fgcontext = this[_].bgcontext;
+      this[_].bgcontext = previous;
+      const fg = this[_].contexts[this[_].fgcontext];
+      fg.canvas.style.display = 'block';
+      const bg = this[_].contexts[this[_].bgcontext];
+      bg.canvas.style.display = 'none';
+      bg.fillStyle = this[_].palette[0];
+      bg.fillRect(0, 0, bg.canvas.width, bg.canvas.height);
     }
+  }
+
+  color (color) {
+    this[_].color = color;
+  }
+
+  crt (crt) {
+    console.warn('magic2: partially ignoring command CRT, ' + crt);
+    this[_].cext = (crt & 0x100) != 0;
   }
 
   /**
@@ -264,36 +322,48 @@ class Magic2 {
       addr += 2;
       switch (cmd) {
         case C_LINE:
+          throw new Error('magic2: unsupported command LINE');
         case C_SPLINE:
+          throw new Error('magic2: unsupported command SPLINE');
         case C_BOX:
+          addr += 8;
+          throw new Error('magic2: unsupported command SPLINE');
         case C_TRIANGLE:
-        case C_BOX_FULL:
+          throw new Error('magic2: unsupported command TRIANGLE');
+        case C_BOX_FULL: {
+          const x1 = mem_read_u16be(memory, addr + 0);
+          const y1 = mem_read_u16be(memory, addr + 2);
+          const x2 = mem_read_u16be(memory, addr + 4);
+          const y2 = mem_read_u16be(memory, addr + 6);
+          addr += 8;
+          this.boxFull(x1, y1, x2, y2);
+          break; }
         case C_CIRCLE_FULL:
-          throw new Error('magic2: unsupported command ' + cmd);
-        case C_SET_WINDOW:
+          throw new Error('magic2: unsupported command CIRCLE_FULL');
+        case C_SET_WINDOW: {
           const x1 = mem_read_u16be(memory, addr + 0);
           const y1 = mem_read_u16be(memory, addr + 2);
           const x2 = mem_read_u16be(memory, addr + 4);
           const y2 = mem_read_u16be(memory, addr + 6);
           addr += 8;
           this.setWindow(x1, y1, x2, y2);
-          break;
-        case C_SET_MODE:
+          break; }
+        case C_SET_MODE: {
           const mode = mem_read_u16be(memory, addr);
           addr += 2;
           console.warn('magic2: ignoring command SET_MODE, ' + mode);
-          break;
+          break; }
         case C_POINT:
           throw new Error('magic2: unsupported command POINT');
         case C_CLS:
-          console.warn('magic2: ignoring command CLS');
+          this.cls();
           break;
-        case C_SET_3D_PARAMETER:
+        case C_SET_3D_PARAMETER: {
           const param_num = mem_read_u16be(memory, addr + 0);
-          const param_val = mem_read_u16be(memory, addr + 2);
+          const param_val = mem_read_s16be(memory, addr + 2);
           addr += 4;
           this.set3dParameter (param_num, param_val);
-          break;
+          break; }
         case C_SET_3D_DATA:
           addr += this.set3dRawData(memory, addr);
           break;
@@ -306,36 +376,41 @@ class Magic2 {
           break;
         case C_DONE:
           return shown;
-        case C_COLOR:
+        case C_COLOR: {
           const color = mem_read_u16be(memory, addr);
           addr += 2;
-          console.warn('magic2: ignoring command COLOR, ' + color);
-          break;
-        case C_CRT:
+          this.color(color);
+          break; }
+        case C_CRT: {
           const crt = mem_read_u16be(memory, addr);
           addr += 2;
-          this[_].color = (crt & 0x100) != 0;
-          break;
+          this.crt(crt);
+          break; }
         case C_INIT:
+          // TODO: Initialize palette, etc.
           break;
         case C_AUTO:
           throw new Error('magic2: AUTO should not be used inside AUTO');
-        case C_APAGE:
+        case C_APAGE: {
           const apage = mem_read_u16be(memory, addr);
           addr += 2;
-          console.warn('magic2: ignoring command APAGE, ' + apage);
-          break;
-        case C_DEPTH:
+          this.apage(apage);
+          break; }
+        case C_DEPTH: {
           const minz = mem_read_u16be(memory, addr + 0);
           const maxz = mem_read_u16be(memory, addr + 2);
           addr += 4;
           this.depth(minz, maxz);
-          break;
+          break; }
         default:
           throw new Error('magic2: unknown command ' + cmd);
       }
     }
     // not reached.
+  }
+
+  apage (apage) {
+    this[_].apage = apage;
   }
 
   depth (minz, maxz) {

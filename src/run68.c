@@ -414,7 +414,7 @@ Restart:
 */
 static void exec_emscripten()
 {
-	for (;;) {
+	for (int i = 0; i < 100000; ++i) {
 		if ( (pc & 0xFF000001) != 0 ) {
             fprintf(stderr, "address error at $%08x\n", pc);
             emscripten_cancel_main_loop();
