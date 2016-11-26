@@ -109,13 +109,15 @@
   var data = new Array(4 * 6);
   
   var c = document.getElementById('canvas2').getContext('2d');
-  var xScale = c.canvas.width / 256;
-  var yScale = c.canvas.height / 256;
-  var fontWidth = 4 * xScale;
-  var fontHalfWidth = fontWidth / 2;
-  var fontHeight = 6 * yScale;
-  var fontHalfHeight = fontHeight / 2;
-  c.font = fontHeight + 'px \'Share Tech Mono\'';
+  var scaleX = c.canvas.height / 256 * 4 / 3;
+  var scaleY = c.canvas.height / 256;
+  var offsetX = (c.canvas.width - c.canvas.height * 4 / 3) / 2;
+  var fontScale = 1.2;
+  var fontWidth = (4 * scaleX * fontScale) | 0;
+  var fontHalfWidth = (fontWidth / 2) | 0;
+  var fontHeight = (6 * scaleY * fontScale) | 0;
+  var fontHalfHeight = (fontHeight / 2) | 0;
+  c.font = fontHeight + 'px \'Geo\'';
   c.textAlign = 'center';
   c.textBaseline = 'middle';
 
@@ -127,8 +129,8 @@
       baseY = (index / 512) | 0;
       x = 0;
       y = 0;
-    }
-    else if (index != (base + y * 512 + x)) {
+      pal = 0;
+    } else if (index != (base + y * 512 + x)) {
       console.error('io graphic monitor detects unexpected write sequence');
     }
     data[y * 4 + x] = color != 0 ? 1 : 0;
@@ -140,11 +142,13 @@
       y++;
       if (y == 6) {
         var code = fonts[data.join('')];
+        c.clearRect(
+            baseX * scaleX + offsetX, baseY * scaleY, fontWidth, fontHeight);
         c.fillStyle = magic2.palette(pal);  /* global magic2 */
         c.fillText(
             String.fromCharCode(code),
-            baseX * xScale + fontHalfWidth,
-            baseY * yScale + fontHalfHeight,
+            baseX * scaleX + fontHalfWidth + offsetX,
+            baseY * scaleY + fontHalfHeight,
             fontWidth);
         started = false;
       }

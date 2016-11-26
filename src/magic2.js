@@ -113,7 +113,11 @@ class Magic2 {
       fgcontext: 0,
       bgcontext: 1,
       apage: 0,
-      use2d: contexts[0].constructor.name == 'CanvasRenderingContext2D'
+      use2d: contexts[0].constructor.name == 'CanvasRenderingContext2D',
+      scaleX: contexts[0].canvas.height / 256 * 4 / 3,
+      scaleY: contexts[0].canvas.height / 256,
+      offsetX:
+          (contexts[0].canvas.width - (contexts[0].canvas.height * 4 / 3)) / 2
     };
 
     if (this[_].use2d) {
@@ -145,10 +149,11 @@ class Magic2 {
     const width = Math.abs(x2 - x1);
     const height = Math.abs(y2 - y1);
     const c = this[_].contexts[this[_].apage];
-    const scaleX = c.canvas.width / 256;
-    const scaleY = c.canvas.height / 256;
     c.fillStyle = this[_].palette[this[_].color];
-    c.fillRect(left * scaleX, top * scaleY, width * scaleX, height * scaleY);
+    c.fillRect(left * this[_].scaleX + this[_].offsetX,
+               top * this[_].scaleY,
+               width * this[_].scaleX,
+               height * this[_].scaleY);
   }
 
   setWindow (x1, y1, x2, y2) {
@@ -160,10 +165,7 @@ class Magic2 {
 
   cls () {
     const c = this[_].contexts[this[_].apage];
-    c.globalCompositeOperation = 'copy';
-    c.fillStyle = 'rgba(0, 0, 0, 0.0)';
-    c.fillRect(0, 0, c.canvas.width, c.canvas.height);
-    c.globalCompositeOperation = 'source-over';
+    c.clearRect(0, 0, c.canvas.width, c.canvas.height);
   }
 
   set3dParameter (num, data) {
@@ -264,9 +266,9 @@ class Magic2 {
       var c = this[_].contexts[this[_].bgcontext];
       c.beginPath();
       c.strokeStyle = this[_].palette[this[_].data.color];
-      var w = c.canvas.width;
-      var h = c.canvas.height;
-      var ox = w / 2;
+      var w = 256 * this[_].scaleX;
+      var h = 256 * this[_].scaleY;
+      var ox = c.canvas.width / 2;
       var oy = h / 2;
       // FIXME: Use window information
       var zx = w / 256;

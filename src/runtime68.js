@@ -5,8 +5,9 @@
 /* global magic2 */
 /* global mergeInto */
 // TODO:
-// - Emulate characters.
-// - Emulate stars.
+// - Emulate sprite characters.
+// - Emulate sprite stars.
+// - Emulate fade.
 mergeInto(LibraryManager.library, {
   jsrt_magic2: function(cmd_adr) {
     if (magic2.auto(Module.HEAPU8, cmd_adr))
