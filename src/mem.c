@@ -34,6 +34,7 @@ static  UChar graphic_palette[512];
 #if defined(EMSCRIPTEN)
 extern void jsrt_io_graphic_data(UShort page, ULong index, UShort color);
 extern void jsrt_io_graphic_palette(UShort index, UShort color);
+extern void jsrt_io_sprite_data(ULong index, UShort data);
 #endif
 
 /*
@@ -146,6 +147,11 @@ void mem_set( long adr, long d, char size )
         jsrt_io_graphic_data( 2, ( adr - 0xD00000 ) / 2, d );
         return;
     }
+    if ( 0xEB0000 <= adr && adr < 0xEB0400 ) {   // Sprite Control
+        if ( size != S_WORD )
+            abort();
+        jsrt_io_sprite_data( ( adr - 0xEB0000 ) / 2, d );
+    }
 #endif
 	if ( adr < ENV_TOP || adr >= mem_aloc ) {
 		if ( mem_wrt_chk( adr ) == FALSE )
@@ -223,12 +229,13 @@ static int mem_wrt_chk( long adr )
 	char message[256];
 
 	adr &= 0x00FFFFFF;
-    if ( ( 0xE82000 <= adr && adr < 0xE82200 ) )  // Graphic Palette
+    if ( ( 0xE82000 <= adr && adr < 0xE82200 ) )   // Graphic Palette
         return( TRUE );
-    if ( ( 0xD00000 <= adr && adr < 0xD80000 ) )   // Graphic Page 2
+    if ( ( 0xD00000 <= adr && adr < 0xD80000 ) ||  // Graphic Page 2
+	     ( 0xEB0000 <= adr && adr < 0xEB0400 ) )   // Sprite Control
         return( FALSE );
 	if ( ( 0xE82400 > adr && adr >= 0xE82000 ) ||
-	     ( 0xEBC000 > adr && adr >= 0xEB0000 ) ||
+	     ( 0xEBC000 > adr && adr >= 0xEB0400 ) ||
          ( 0xE82500 == adr ) ) {
 		return( FALSE );
     }

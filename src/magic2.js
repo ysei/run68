@@ -112,6 +112,7 @@ class Magic2 {
       contexts: contexts,
       fgcontext: 0,
       bgcontext: 1,
+      clients: [],
       apage: 0,
       use2d: contexts[0].constructor.name == 'CanvasRenderingContext2D',
       scaleX: contexts[0].canvas.height / 256 * 4 / 3,
@@ -141,6 +142,10 @@ class Magic2 {
     var g = (((color >> 11) & 0x1f) << 3) + i;
     var b = (((color >>  1) & 0x1f) << 3) + i;
     this[_].palette[index] = 'rgba(' + r + ',' + g + ',' + b + ',255)';
+  }
+
+  vsync (client) {
+    this[_].clients.push(client);
   }
 
   boxFull (x1, y1, x2, y2) {
@@ -296,6 +301,8 @@ class Magic2 {
       this[_].fgcontext = this[_].bgcontext;
       this[_].bgcontext = previous;
       const fg = this[_].contexts[this[_].fgcontext];
+      for (var client of this[_].clients)
+        client(fg);
       fg.canvas.style.display = 'block';
       const bg = this[_].contexts[this[_].bgcontext];
       bg.canvas.style.display = 'none';

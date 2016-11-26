@@ -17,6 +17,11 @@ static void super() {
 
 #if defined(EMSCRIPTEN)
 extern int jsrt_iocs_bitsns(int group);
+extern void jsrt_iocs_sp_on();
+extern void jsrt_iocs_sp_off();
+extern void jsrt_iocs_sp_regst(
+    ULong id, ULong x, ULong y, ULong code, ULong prio);
+// FIXME: rename to jsrt_iocs_gpalet.
 extern void jsrt_io_graphic_palette(UShort index, UShort color);
 #endif
 
@@ -45,13 +50,13 @@ int iocs_call() {
 #endif
       break;
     case 0xc1:  // SP_ON
-      // TODO
+      jsrt_iocs_sp_on();
       break;
     case 0xc2:  // SP_OFF
-      // TODO
+      jsrt_iocs_sp_off();
       break;
     case 0xc6:  // SP_REGST
-      // TODO
+      jsrt_iocs_sp_regst(rd[1], rd[2], rd[3], rd[4], rd[5]);
       break;
     case 0xcc:  // BGTEXTCL
       // TODO
