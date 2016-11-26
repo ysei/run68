@@ -113,7 +113,29 @@
   window.iocs_bitsns = function(group) {
     return keyStates[group];
   };
- 
+
+  var contrast = {
+    now: 15,
+    target: 15
+  };
+
+  window.iocs_contrast = function(c) {
+    contrast.target = c;
+  };
+
+  setInterval(function () {
+    if (contrast.now == contrast.target)
+      return;
+    if (contrast.now < contrast.target)
+      contrast.now++;
+    else
+      contrast.now--;
+    var canvas = document.getElementsByTagName('canvas');
+    Array.prototype.map.call(canvas, function (c) {
+      c.style.opacity = contrast.now / 15;
+    });
+  }, 50);
+
   window.iocs_joyget = function (id) {
     if (!navigator.getGamepads)
       return 0xff;

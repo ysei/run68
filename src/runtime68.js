@@ -3,6 +3,7 @@
 /* global io_graphic_data */
 /* global io_sprite_data */
 /* global iocs_bitsns */
+/* global iocs_contrast */
 /* global iocs_joyget */
 /* global iocs_sp_off */
 /* global iocs_sp_on */
@@ -11,7 +12,6 @@
 /* global mergeInto */
 // TODO:
 // - Emulate sprite characters.
-// - Emulate fade.
 mergeInto(LibraryManager.library, {
   jsrt_magic2: function(cmd_adr) {
     if (magic2.auto(Module.HEAPU8, cmd_adr))
@@ -20,6 +20,9 @@ mergeInto(LibraryManager.library, {
   },
   jsrt_iocs_bitsns: function(group) {
     return iocs_bitsns(group);
+  },
+  jsrt_iocs_contrast: function(c) {
+    return iocs_contrast(c);
   },
   jsrt_iocs_joyget: function(id) {
     return iocs_joyget(id);
