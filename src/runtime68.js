@@ -3,6 +3,7 @@
 /* global io_graphic_data */
 /* global io_sprite_data */
 /* global iocs_bitsns */
+/* global iocs_joyget */
 /* global iocs_sp_off */
 /* global iocs_sp_on */
 /* global iocs_sp_regst */
@@ -19,6 +20,9 @@ mergeInto(LibraryManager.library, {
   },
   jsrt_iocs_bitsns: function(group) {
     return iocs_bitsns(group);
+  },
+  jsrt_iocs_joyget: function(id) {
+    return iocs_joyget(id);
   },
   jsrt_iocs_sp_on: function () {
     iocs_sp_on();

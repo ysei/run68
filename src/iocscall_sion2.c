@@ -17,6 +17,7 @@ static void super() {
 
 #if defined(EMSCRIPTEN)
 extern int jsrt_iocs_bitsns(int group);
+extern int jsrt_iocs_joyget(int id);
 extern void jsrt_iocs_sp_on();
 extern void jsrt_iocs_sp_off();
 extern void jsrt_iocs_sp_regst(
@@ -39,7 +40,7 @@ int iocs_call() {
       // TODO
       break;
     case 0x3b:  // JOYGET
-      rd[0] = 0xff; // & ~0x40;
+      rd[0] = jsrt_iocs_joyget(rd[1]);
       break;
     case 0x81:  // B_SUPER
       super();

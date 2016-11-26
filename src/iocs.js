@@ -1,4 +1,5 @@
 /* global magic2 */
+/* global navigator */
 (function() {
   var keyStates = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
@@ -112,6 +113,32 @@
   window.iocs_bitsns = function(group) {
     return keyStates[group];
   };
+ 
+  window.iocs_joyget = function (id) {
+    if (!navigator.getGamepads)
+      return 0xff;
+    var pad = navigator.getGamepads()[id];
+    if (!pad)
+      return 0xff;
+    var bits = 0xff;
+    var x = pad.axes[0] || 0;
+    var y = pad.axes[1] || 0;
+    var a = pad.buttons[0] && pad.buttons[0].pressed;
+    var b = pad.buttons[1] && pad.buttons[1].pressed;
+    if (x < -0.5)
+      bits &= ~0x04;
+    else if (x > 0.5)
+      bits &= ~0x08;
+    if (y < -0.5)
+      bits &= ~0x01;
+    else if (y > 0.5)
+      bits &= ~0x02;
+    if (a)
+      bits &= ~0x40;
+    if (b)
+      bits &= ~0x20;
+    return bits;
+  };
 
   var sprites = new Array(128);
   for (var i = 0; i < 128; ++i) {
@@ -151,7 +178,7 @@
               s.id ? 1 : 2);
           continue;
         case 7: {  // scope
-          var scale = 1 + (s.tick++ % 20) / 20;
+          var scale = 1 + (s.tick++ % 10) / 10;
           var w = 16 * scaleX / scale;
           var h = 16 * scaleY / scale;
           var bx = x * scaleX + offsetX + (16 * scaleX - w) / 2;
