@@ -141,7 +141,7 @@ class Magic2 {
     var r = (((color >>  6) & 0x1f) << 3) + i;
     var g = (((color >> 11) & 0x1f) << 3) + i;
     var b = (((color >>  1) & 0x1f) << 3) + i;
-    this[_].palette[index] = 'rgba(' + r + ',' + g + ',' + b + ',255)';
+    this[_].palette[index] = 'rgba(' + r + ',' + g + ',' + b + ',1.0)';
   }
 
   vsync (client) {

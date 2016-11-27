@@ -234,7 +234,6 @@ void add_conditions(long src, long dest, long result, int size, BOOL zero_flag) 
  */
 
 void cmp_conditions(long src, long dest, long result, int size) {
-
 	int 	Sm, Dm, Rm;
 
 	Sm = (getMSB(src,    size) != (long)0);

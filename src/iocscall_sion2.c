@@ -16,9 +16,12 @@ static void super() {
 }
 
 #if defined(EMSCRIPTEN)
-extern int jsrt_iocs_bitsns(int group);
-extern int jsrt_iocs_contrast(UChar c);
-extern int jsrt_iocs_joyget(int id);
+extern void jsrt_iocs_bgscrlst(ULong page, UShort x, UShort y);
+extern void jsrt_iocs_bgtextcl(UChar page, UShort code);
+extern void jsrt_iocs_bgtextst(UChar page, UChar x, UChar y, UShort code);
+extern int jsrt_iocs_bitsns(UChar group);
+extern void jsrt_iocs_contrast(UChar c);
+extern int jsrt_iocs_joyget(UChar id);
 extern void jsrt_iocs_sp_on();
 extern void jsrt_iocs_sp_off();
 extern void jsrt_iocs_sp_regst(
@@ -29,12 +32,11 @@ extern void jsrt_io_graphic_palette(UShort index, UShort color);
 
 int iocs_call() {
   UChar no = rd[0] & 0xff;
+  rd[0] = 0;
   switch (no) {
     case 0x04:  // BITSNS
 #if defined(EMSCRIPTEN)
       rd[0] = jsrt_iocs_bitsns(rd[1]);
-#else
-      rd[0] = 0;
 #endif
       break;
 #if defined(EMSCRIPTEN)
@@ -67,11 +69,14 @@ int iocs_call() {
     case 0xc6:  // SP_REGST
       jsrt_iocs_sp_regst(rd[1], rd[2], rd[3], rd[4], rd[5]);
       break;
+    case 0xc8:  // BGSCRLST
+      jsrt_iocs_bgscrlst(rd[1], rd[2], rd[3]);
+      break;
     case 0xcc:  // BGTEXTCL
-      // TODO
+      jsrt_iocs_bgtextcl(rd[1], rd[2]);
       break;
     case 0xcd:  // BGTEXTST
-      // TODO
+      jsrt_iocs_bgtextst(rd[1], rd[2], rd[3], rd[4]);
       break;
 #endif
     default:

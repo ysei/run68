@@ -123,7 +123,7 @@
     contrast.target = c;
   };
 
-  setInterval(function () {
+  magic2.vsync(function () {
     if (contrast.now == contrast.target)
       return;
     if (contrast.now < contrast.target)
@@ -134,7 +134,7 @@
     Array.prototype.map.call(canvas, function (c) {
       c.style.opacity = contrast.now / 15;
     });
-  }, 50);
+  });
 
   window.iocs_joyget = function (id) {
     if (!navigator.getGamepads)
@@ -289,5 +289,81 @@
         sprite.show = data != 0;
         break;
     }
+  };
+
+  var bg = new Array(64 * 64);
+  var bgscrY = 0;
+  var bgtext =
+      '________________________________' +  // 0x00-0x1F
+      " !'#$%&#()*+,-./0123456789:;<=>?" +  // 0x20-0x3F
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZ@_____' +  // 0x40-0x5F
+      '________________________________' +  // 0x60-0x7F
+      '________________________________' +  // 0x80-0x9F
+      '________________________________' +  // 0xA0-0xBF
+      '________________________________' +  // 0xC0-0xDF
+      '________________________________';    // 0xE0-0xFF
+
+  magic2.vsync(function(c) {
+    var scaleX = c.canvas.height / 256 * 4 / 3 * 8;
+    var scaleY = c.canvas.height / 256 * 8;
+    var offsetX = (c.canvas.width - c.canvas.height * 4 / 3) / 2;
+    c.font = scaleY + 'px \'Audiowide\'';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    for (var i = 0; i < bg.length; ++i) {
+      var ix = i % 64;
+      if (ix >= 32)
+        continue;
+      var iy = (i / 64) | 0;
+      var id = bg[i].id;
+      if (id == 1)
+        continue;
+      var chr = bgtext[id];
+      //if (chr == '_')
+      //  continue;
+      if (chr == '@') {
+        switch (id) {
+          case 0x5A:
+            chr = 'II';
+            break;
+        }
+      }
+      var x = ix * scaleX + offsetX;
+      var y = (iy - bgscrY / 8) * scaleY;
+      c.fillStyle = 'rgba(255, 255, 255, 1.0)';
+      c.fillText(chr, x + scaleX / 2, y + scaleY / 2, scaleX);
+    }
+  });
+
+  window.iocs_bgscrlst = function(page, x, y) {
+    bgscrY = y;
+  };
+
+  window.iocs_bgtextcl = function(page, code) {
+    if (page != 0)
+      console.error('Only BG 0 is supported.');
+    var id = code & 0xff;
+    var flipX = (code & 0x4000) != 0;
+    var flipY = (code & 0x8000) != 0;
+    for (var i = 0; i < bg.length; ++i) {
+      bg[i] = {
+        id: id,
+        flipX: flipX,
+        flipY: flipY
+      };
+    }
+  };
+  window.iocs_bgtextcl(0, 0);
+
+  window.iocs_bgtextst = function(page, x, y, code) {
+    if (page != 0)
+      console.error('Only BG 0 is supported.');
+    var index = (y & 0x3f) * 64 + (x & 0x3f);
+    var id = code & 0xff;
+    var flipX = (code & 0x4000) != 0;
+    var flipY = (code & 0x8000) != 0;
+    bg[index].id = id;
+    bg[index].flipX = flipX;
+    bg[index].flipY = flipY;
   };
 })();
