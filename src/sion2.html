@@ -79,6 +79,13 @@
           console.info('status:', text);
         }
       };
+      // Hooks up so that Emscripten's main loop uses requestAnimationFrame.
+      window._setTimeout = window.setTimeout;
+      window.setTimeout = function (f, t) {
+        if (t < 17)
+          return window.requestAnimationFrame(f);
+        return window._setTimeout(f, t);
+      };
     </script>
     <script type="text/javascript" src="iocs.js"></script>
     <script type="text/javascript" src="io.js"></script>
