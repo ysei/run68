@@ -3,10 +3,12 @@
   <head>
     <title>SION2 HD</title>
     <meta name="theme-color" content="#333333">
+    <meta charset="utf-8">
     <link rel="manifest" href="manifest.json">
-    <link href="https://fonts.googleapis.com/css?family=Geo|Audiowide" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Geo|Audiowide|Fira+Mono" rel="stylesheet">
     <script>
       document.fonts.load('10px Audiowide');
+      document.fonts.load('10px \'Fira Mono\'');
       document.fonts.load('10px Geo');
     </script>
     <style>
@@ -34,7 +36,7 @@
       <canvas id="canvas2" width="1280" height="720" style="z-index: 2;"></canvas>
       <canvas id="canvas3" width="1280" height="720" style="z-index: 3;"></canvas>
     </div>
-    <script type="text/javascript" src="magic2.js"></script>
+    <script type="text/javascript" charset="UTF-8" src="magic2.js"></script>
     <script type='text/javascript'>
       var canvas = document.getElementsByTagName('canvas');
       /* global Magic2 */
@@ -73,8 +75,8 @@
         return window._setTimeout(f, t);
       };
     </script>
-    <script type="text/javascript" src="iocs.js"></script>
-    <script type="text/javascript" src="io.js"></script>
-    <script defer type="text/javascript" src="run68.js"></script>
+    <script type="text/javascript" charset="UTF-8" src="iocs.js"></script>
+    <script type="text/javascript" charset="UTF-8" src="io.js"></script>
+    <script defer type="text/javascript" charset="ShiftJIS" src="run68.js"></script>
   </body>
 </html>

@@ -426,10 +426,10 @@
   var bg = new Array(64 * 64);
   var bgscrY = 0;
   var bgtext =
-      '________________________________' +  // 0x00-0x1F
+      '_________________________@______' +  // 0x00-0x1F
       " !'#$%&#()*+,-./0123456789:;<=>?" +  // 0x20-0x3F
       'ABCDEFGHIJKLMNOPQRSTUVWXYZ@_____' +  // 0x40-0x5F
-      '________________________________' +  // 0x60-0x7F
+      '____@@@@@@@@____________________' +  // 0x60-0x7F
       '________________________________' +  // 0x80-0x9F
       '________________________________' +  // 0xA0-0xBF
       '________________________________' +  // 0xC0-0xDF
@@ -439,10 +439,16 @@
     var scaleX = c.canvas.height / 256 * 4 / 3 * 8;
     var scaleY = c.canvas.height / 256 * 8;
     var offsetX = (c.canvas.width - c.canvas.height * 4 / 3) / 2;
-    c.font = scaleY + 'px \'Audiowide\'';
     c.textAlign = 'center';
     c.textBaseline = 'middle';
+    var styleW = 'rgba(255, 255, 255, 1.0)';
+    var styleB = 'rgba(0, 255, 255, 0.5)';
+    var styleR = 'rgba(255, 0, 0, 0.5)';
+    var fontA = scaleY + 'px \'Audiowide\'';
+    var fontF = scaleY + 'px \'Fira Mono\'';
     for (var i = 0; i < bg.length; ++i) {
+      var style = styleW;
+      var font = fontA;
       var ix = i % 64;
       if (ix >= 32)
         continue;
@@ -455,14 +461,44 @@
       //  continue;
       if (chr == '@') {
         switch (id) {
+          case 0x19:
+            font = fontF;
+            style = styleB;
+            chr = '■';
+            break;
           case 0x5A:
             chr = 'II';
+            break;
+          case 0x64:
+          case 0x68:
+            font = fontF;
+            style = styleR;
+            chr = '⬅';
+            break;
+          case 0x65:
+          case 0x69:
+            font = fontF;
+            style = styleR;
+            chr = '➡';
+            break;
+          case 0x66:
+          case 0x6A:
+            font = fontF;
+            style = styleR;
+            chr = '⬆';
+            break;
+          case 0x67:
+          case 0x6B:
+            font = fontF;
+            style = styleR;
+            chr = '⬇';
             break;
         }
       }
       var x = ix * scaleX + offsetX;
       var y = (iy - bgscrY / 8) * scaleY;
-      c.fillStyle = 'rgba(255, 255, 255, 1.0)';
+      c.font = font;
+      c.fillStyle = style;
       c.fillText(chr, x + scaleX / 2, y + scaleY / 2, scaleX);
     }
   });
