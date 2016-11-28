@@ -15,7 +15,9 @@
     x: { id: -1 },
     axes: {
       x: 0,
+      ax: 0,
       y: 0,
+      ay : 0,
       id: -1
     }
   };
@@ -27,7 +29,6 @@
       if (touch.clientY < (h / 3)) {
         if (touch.clientX < (w / 2)) {
           touches.esc.id = touch.identifier;
-          console.log('esc on:', touches.esc.id);
           touches.esc.pressed = true;
         } else {
           touches.f5.id = touch.identifier;
@@ -39,7 +40,9 @@
         touches.axes.id = touch.identifier;
         touches.axes.x = touch.clientX;
         touches.axes.y = touch.clientY;
-      } else if (touch.clientX > (w * 3 / 4)) {
+        touches.axes.ax = 0;
+        touches.axes.ay = 0;
+      } else if (touch.clientX > (w * 4 / 5)) {
         touches.z.id = touch.identifier;
         touchbits &= ~0x40;
       } else {
@@ -52,9 +55,7 @@
   document.addEventListener('touchend', function(e) {
     for (var touch of e.changedTouches) {
       var id = touch.identifier;
-      console.log('end:', id);
       if (id == touches.esc.id) {
-        console.log('esc off');
         touches.esc.id = -1;
         touches.esc.pressed = false;
       } else if (id == touches.f5.id) {
@@ -73,25 +74,39 @@
     }
   }, false);
 
+  var updateTouch = function(a, d) {
+    var offset = a * -4;
+    if (d > (3 + offset))
+      return 1;
+    if (d < (-3 + offset))
+      return -1;
+    return 0;
+  };
+
   document.addEventListener('touchmove', function(e) {
-    var range = 32;
     e.preventDefault();
     for (var touch of e.changedTouches) {
       if (touch.identifier != touches.axes.id)
         continue;
-      if (touch.clientX > (touches.axes.x + range)) {
+      var dx = touches.axes.x - touch.clientX;
+      touches.axes.x = touch.clientX;
+      touches.axes.ax = updateTouch(touches.axes.ax, dx);
+      if (touches.axes.ax < 0) {
         touchbits &= ~0x08;
         touchbits |= 0x04;
-      } else if (touch.clientX < (touches.axes.x - range)) {
+      } else if (touches.axes.ax > 0) {
         touchbits |= 0x08;
         touchbits &= ~0x04;
       } else {
         touchbits |= 0x0c;
       }
-      if (touch.clientY > (touches.axes.y + range)) {
+      var dy = touches.axes.y - touch.clientY;
+      touches.axes.y = touch.clientY;
+      touches.axes.ay = updateTouch(touches.axes.ay, dy);
+      if (touches.axes.ay < 0) {
         touchbits &= ~0x02;
         touchbits |= 0x01;
-      } else if (touch.clientY < (touches.axes.y - range)) {
+      } else if (touches.axes.ay > 0) {
         touchbits |= 0x02;
         touchbits &= ~0x01;
       } else {
@@ -126,10 +141,48 @@
     }
   }
 
+  var SafariWhichToCode = function (which) {
+    switch (which) {
+      case 27:
+        return 'Escape';
+      case 37:
+        return 'ArrowLeft';
+      case 38:
+        return 'ArrowUp';
+      case 39:
+        return 'ArrowRight';
+      case 40:
+        return 'ArrowDown';
+      case 51:
+      case 112:
+        return 'Digit1';
+      case 52:
+      case 113:
+        return 'Digit2';
+      case 53:
+      case 114:
+        return 'Digit3';
+      case 54:
+      case 115:
+        return 'Digit4';
+      case 55:
+      case 116:
+        return 'Digit5';
+      case 88:
+        return 'KeyX';
+      case 90:
+        return 'KeyZ';
+    }
+  }
+
   // ESC, F1-F5
   window.addEventListener('keydown', function(e) {
-    if (!e.code)
-      e.code = EdgeKeyToCode(e.key);
+    if (!e.code) {
+      if (e.key)
+        e.code = EdgeKeyToCode(e.key);
+      else
+        e.code = SafariWhichToCode(e.which);
+    }
     switch (e.code) {
       case 'ArrowDown':
         keyStates[7] |= (1 << 6);
@@ -183,8 +236,12 @@
   }, false);
 
   window.addEventListener('keyup', function(e) {
-    if (!e.code)
-      e.code = EdgeKeyToCode(e.key);
+    if (!e.code) {
+      if (e.key)
+        e.code = EdgeKeyToCode(e.key);
+      else
+        e.code = SafariWhichToCode(e.which);
+    }
     switch (e.code) {
       case 'ArrowDown':
         keyStates[7] &= ~(1 << 6);
